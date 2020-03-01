@@ -111,6 +111,7 @@ export default {
         this.videoId = this.playlist[this.currentIndex].id;
       } else {
         this.videoId = this.playlist[0].id;
+        this.currentIndex = 0;
       }
     },
     playing() {
