@@ -9,6 +9,9 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 Vue.config.productionTip = false
 
+import { firestorePlugin } from 'vuefire'
+Vue.use(firestorePlugin)
+
 new Vue({
   render: h => h(App),
 }).$mount('#app')

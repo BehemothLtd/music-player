@@ -3,7 +3,13 @@
     <div class="container">
       <div class="row">
         <div class="col-8">
-          <youtube :video-id="videoId" :player-vars="playerVars" @ended="nextSong" :fit-parent="true"></youtube>
+          <youtube
+            ref="youtube"
+            :video-id="videoId"
+            :player-vars="playerVars"
+            @ended="nextSong"
+            :fit-parent="true"
+          ></youtube>
         </div>
         <div class="col-4">
           <div class="form">
@@ -26,7 +32,11 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(video, index) in playlist" :key="video.id">
+              <tr
+                :class="{ 'alert alert-info': (index == currentIndex) }"
+                v-for="(video, index) in playlist"
+                :key="video.id"
+              >
                 <th scope="row">{{ index }}</th>
                 <td>{{ video.url }}</td>
               </tr>
@@ -39,23 +49,62 @@
 </template>
 
 <script>
+// import _ from "lodash";
+import { db } from "@/firebase";
+
 export default {
   name: "App",
   data: function() {
     return {
+      playlistId: null,
       playlist: [],
       url: "",
       videoId: null,
       currentIndex: 0,
       playerVars: {
-        autoplay: 1
-      }
+        autoplay: 1 
+      },
+      date: new Date()
+        .toJSON()
+        .slice(0, 10)
+        .replace(/-/g, "/")
     };
   },
   created: function() {
-    this.play();
+    this.fetchOrCreatePlaylistForToday();
+  },
+  firestore: {
+    playlists: db.collection("playlists")
   },
   methods: {
+    fetchOrCreatePlaylistForToday() {
+      let self = this;
+
+      this.$firestoreRefs.playlists
+        .where("date", "==", this.date)
+        .get()
+        .then(function(querySnapshot) {
+          if (querySnapshot.empty) {
+            self.$firestoreRefs.playlists.add({
+              date: self.date,
+              data: [],
+              index: 0,
+            });
+            self.fetchOrCreatePlaylistForToday();
+          } else {
+            const docData = querySnapshot.docs[0];
+
+            self.playlistId = docData.id;
+            self.playlist = docData.data().data;
+            self.currentIndex = docData.data().index;
+            self.startAt = docData.data().startAt;
+            self.play();
+          }
+        })
+        .catch(function(error) {
+          console.log("Error getting documents: ", error);
+        });
+    },
     play: function() {
       if (this.playlist[this.currentIndex]) {
         this.videoId = this.playlist[this.currentIndex].id;
@@ -70,6 +119,7 @@ export default {
       console.log("ended");
       this.currentIndex += 1;
       this.play();
+      this.syncDbData();
     },
     addSong() {
       if (this.url === "") {
@@ -80,13 +130,25 @@ export default {
       this.playlist.push({
         url: this.url,
         id: this.$youtube.getIdFromUrl(this.url)
-      })
+      });
+
+      this.syncDbData();
+
       this.url = "";
 
       if (this.playlist.length == 1) {
-        this.play()
+        this.play();
       }
-    }
+    },
+    syncDbData() {
+      db.collection("playlists")
+        .doc(this.playlistId)
+        .set({
+          data: this.playlist,
+          date: this.date,
+          index: this.currentIndex,
+        });
+    },
   }
 };
 </script>
