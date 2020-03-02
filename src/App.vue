@@ -11,7 +11,7 @@
             :fit-parent="true"
           ></youtube>
         </div>
-        <div class="col-4">
+        <div class="col-4 playlist">
           <div class="form">
             <div class="form-group row">
               <label class="col-sm-2"></label>
@@ -62,7 +62,7 @@ export default {
       videoId: null,
       currentIndex: 0,
       playerVars: {
-        autoplay: 1,
+        autoplay: 1
       },
       date: new Date()
         .toJSON()
@@ -88,7 +88,7 @@ export default {
             self.$firestoreRefs.playlists.add({
               date: self.date,
               data: [],
-              index: 0,
+              index: 0
             });
             self.fetchOrCreatePlaylistForToday();
           } else {
@@ -128,6 +128,8 @@ export default {
         return;
       }
 
+      this.fetchOrCreatePlaylistForToday();
+
       this.playlist.push({
         url: this.url,
         id: this.$youtube.getIdFromUrl(this.url)
@@ -147,11 +149,9 @@ export default {
         .set({
           data: this.playlist,
           date: this.date,
-          index: this.currentIndex,
+          index: this.currentIndex
         });
-      
-      this.fetchOrCreatePlaylistForToday();
-    },
+    }
   }
 };
 </script>
@@ -163,5 +163,12 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
   margin-top: 60px;
+}
+
+.playlist {
+  display: flex;
+  flex-flow: column-reverse;
+  height: 500px;
+  overflow-y: auto;
 }
 </style>
