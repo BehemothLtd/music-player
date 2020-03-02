@@ -149,6 +149,8 @@ export default {
           date: this.date,
           index: this.currentIndex,
         });
+      
+      this.fetchOrCreatePlaylistForToday();
     },
   }
 };
