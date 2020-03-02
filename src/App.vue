@@ -63,7 +63,6 @@ export default {
       currentIndex: 0,
       playerVars: {
         autoplay: 1,
-        controls: 0
       },
       date: new Date()
         .toJSON()
